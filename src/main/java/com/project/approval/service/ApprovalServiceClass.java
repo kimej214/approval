@@ -44,6 +44,12 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
         return (maxNum != null ? maxNum + 1 : 1L);
     }
 
+    @Override
+    public ApprovalListDTO getDraftByWriter(String writerId) {
+        return approvalMapper.findDraftByWriter(writerId);
+    }
+
+
     // ✅ 결재 등록 (insert)
     @Override
     public ApprovalListDTO insertApproval(ApprovalListDTO dto) {

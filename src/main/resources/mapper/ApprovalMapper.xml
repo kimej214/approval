@@ -18,6 +18,7 @@
         LEFT JOIN approval_emp e1 ON a.writer_id = e1.user_id
         LEFT JOIN approval_emp e2 ON a.approver_id = e2.user_id
         LEFT JOIN approval_status s ON a.status_code = s.status_code
+        WHERE a.status_code != 'TMP'  <!-- ✅ 추가 -->
         ORDER BY a.num DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -37,6 +38,17 @@
         a.status_code AS statusCode
         FROM approval_list a
         WHERE a.num = #{num}
+    </select>
+
+    <!-- ✅ 작성자의 임시저장 글 1건 조회 -->
+    <select id="findDraftByWriter" resultType="com.project.approval.dto.ApprovalListDTO">
+        SELECT
+        num, writer_id AS writerId, title, content, reg_date AS regDate, status_code AS statusCode
+        FROM approval_list
+        WHERE writer_id = #{writerId}
+        AND status_code = 'TMP'
+        ORDER BY reg_date DESC
+        LIMIT 1
     </select>
 
     <!-- 전체 개수 -->

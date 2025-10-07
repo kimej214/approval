@@ -18,4 +18,5 @@ public interface ApprovalServiceInter {
 
     int updateStatus(Long num, String statusCode);
 
+    ApprovalListDTO getDraftByWriter(String writerId);
 }

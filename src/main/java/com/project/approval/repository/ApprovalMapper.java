@@ -29,4 +29,5 @@ public interface ApprovalMapper {
                      @Param("statusCode") String statusCode);
 
 
+    ApprovalListDTO findDraftByWriter(String writerId);
 }

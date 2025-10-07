@@ -2,6 +2,7 @@ package com.project.approval.controller;
 
 import com.project.approval.dto.ApprovalListDTO;
 import com.project.approval.service.ApprovalServiceInter;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,10 +31,27 @@ public class ApprovalController {
 
     // ✅ 단일 결재 상세조회  (선택 시 표시)
     @GetMapping("/{num}")
-    public ResponseEntity<ApprovalListDTO> getApprovalDetail(@PathVariable("num") Long num) {
+    public ResponseEntity<?> getApprovalDetail(@PathVariable Long num, HttpSession session) {
         ApprovalListDTO dto = approvalService.getApprovalDetail(num);
+        String loginUserId = (String) session.getAttribute("userId"); // 로그인 사용자
+
+        if ("TMP".equals(dto.getStatusCode()) && !dto.getWriterId().equals(loginUserId)) {
+            return ResponseEntity.status(403).body("임시저장 문서는 작성자만 볼 수 있습니다.");
+        }
         return ResponseEntity.ok(dto);
     }
+
+    // ✅ 작성자의 임시저장 문서 조회
+    @GetMapping("/draft/{writerId}")
+    public ResponseEntity<?> getDraftByWriter(@PathVariable String writerId) {
+        ApprovalListDTO draft = approvalService.getDraftByWriter(writerId);
+        if (draft != null) {
+            return ResponseEntity.ok(draft);
+        } else {
+            return ResponseEntity.noContent().build(); // 204
+        }
+    }
+
 
     // ✅ 번호 조회 (작성 시 nextNum 미리 표시)
     @GetMapping("/nextNum")
