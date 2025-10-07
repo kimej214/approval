@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.project.approval.repository.PositionMapper">
+
+    <!-- 단일 직급 -->
+    <select id="findPositionByCd" parameterType="string" resultType="com.project.approval.dto.PositionsDTO">
+        SELECT position_cd, position_name, level_no
+        FROM positions
+        WHERE position_cd = #{positionCd}
+    </select>
+
+    <!-- 전체 직급 -->
+    <select id="findAllPositions" resultType="com.project.approval.dto.PositionsDTO">
+        SELECT position_cd, position_name, level_no
+        FROM positions
+    </select>
+
+</mapper>

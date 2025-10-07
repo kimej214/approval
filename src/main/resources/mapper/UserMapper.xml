@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.project.approval.repository.UserMapper">
+
+    <!-- 로그인용 (직급 포함) -->
+    <select id="findByUsernameAndPassword" resultType="com.project.approval.dto.UserWithPositionDTO">
+        SELECT
+        e.emp_no AS id,
+        e.emp_name AS username,       <!-- ✅ 실제 이름으로 변경 -->
+        e.user_id AS userId,          <!-- 로그인 ID는 별도 필드로 보관 -->
+        e.user_pw AS password,
+        e.position_cd AS positionCd,
+        p.position_name AS positionName,
+        p.level_no AS levelNo
+        FROM approval_emp e
+        LEFT JOIN positions p ON e.position_cd = p.position_cd
+        WHERE e.user_id = #{userName}
+        AND e.user_pw = #{password}
+    </select>
+
+    <!-- 단일 유저 -->
+    <select id="findUserById" parameterType="long" resultType="com.project.approval.dto.UserDTO">
+        SELECT
+        emp_no AS id,
+        user_id AS userName,
+        user_pw AS password,
+        position_cd
+        FROM approval_emp
+        WHERE emp_no = #{id}
+    </select>
+
+    <!-- 전체 유저 -->
+    <select id="findAllUsers" resultType="com.project.approval.dto.UserDTO">
+        SELECT
+        emp_no AS id,
+        user_id AS userName,
+        user_pw AS password,
+        position_cd
+        FROM approval_emp
+    </select>
+
+    <!-- 단일 유저 + 직급 조인 -->
+    <select id="findUserWithPosition" parameterType="java.lang.Long" resultType="com.project.approval.dto.UserWithPositionDTO">
+        SELECT
+        e.emp_no AS id,
+        e.user_id AS username,
+        e.position_cd,
+        p.position_name,
+        p.level_no
+        FROM approval_emp e
+        LEFT JOIN positions p ON e.position_cd = p.position_cd
+        WHERE e.emp_no = #{id}
+    </select>
+
+    <!-- 전체 유저 + 직급 조인 -->
+    <select id="findAllUsersWithPosition" resultType="com.project.approval.dto.UserWithPositionDTO">
+        SELECT
+        e.emp_no AS id,
+        e.user_id AS username,
+        e.position_cd,
+        p.position_name,
+        p.level_no
+        FROM approval_emp e
+        LEFT JOIN positions p ON e.position_cd = p.position_cd
+    </select>
+
+</mapper>
