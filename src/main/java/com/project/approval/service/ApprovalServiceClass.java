@@ -17,19 +17,33 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
         this.approvalMapper = approvalMapper;
     }
 
-
     @Override
-    public Map<String, Object> getApprovalListPaged(int page, int size) {
+    public Map<String, Object> getApprovalListPaged(int page, int size, String userId, Integer levelNo) {
         int offset = (page - 1) * size;
-        List<ApprovalListDTO> list = approvalMapper.findApprovalsPaged(size, offset);
-        int totalCount = approvalMapper.countApprovals();
-        int totalPages = (int) Math.ceil((double) totalCount / size);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("limit", size);
+        params.put("offset", offset);
+        params.put("userId", userId);
+        params.put("levelNo", levelNo);
+
+        // ✅ 사원(levelNo == 1)은 본인 관련 문서만 조회
+        List<ApprovalListDTO> approvals;
+        int totalCount;
+
+        if (levelNo != null && levelNo == 1) {
+            approvals = approvalMapper.findApprovalsPagedByRole(params);
+            totalCount = approvalMapper.countApprovalsByRole(params);
+        } else {
+            approvals = approvalMapper.findApprovalsPaged(params);
+            totalCount = approvalMapper.countApprovals(); // 전체 카운트
+        }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("list", list);
-        result.put("totalPages", totalPages);
-        result.put("currentPage", page);
+        result.put("approvals", approvals);
         result.put("totalCount", totalCount);
+        result.put("page", page);
+        result.put("size", size);
         return result;
     }
 
@@ -59,6 +73,30 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
 
     @Override
     public int updateStatus(Long num, String statusCode) {
-        return approvalMapper.updateStatus(num, statusCode);
+        // 현재 문서 상태 조회
+        ApprovalListDTO current = approvalMapper.findApprovalByNum(num);
+        String nextStatus = statusCode;
+
+        // 중간결재자가 승인한 경우 → 결재중(APR)
+        if ("PND".equals(current.getStatusCode()) && "APR".equals(statusCode)) {
+            nextStatus = "APR"; // 중간결재 중
+        }
+        // 최종결재자가 승인한 경우 → 완료(CMP)
+        else if ("APR".equals(current.getStatusCode()) && "APR".equals(statusCode)) {
+            nextStatus = "CMP"; // 결재완료
+        }
+        // 반려는 그대로
+        else if ("REJ".equals(statusCode)) {
+            nextStatus = "REJ";
+        }
+
+        return approvalMapper.updateStatus(num, nextStatus);
+    }
+
+    public List<ApprovalListDTO> getVisibleApprovals(String userId, String positionCd) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+        params.put("positionCd", positionCd);
+        return approvalMapper.findVisibleApprovals(params);
     }
 }

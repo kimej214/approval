@@ -1,6 +1,5 @@
 package com.project.approval.controller;
 
-
 import com.project.approval.dto.UserDTO;
 import com.project.approval.dto.UserWithPositionDTO;
 import com.project.approval.service.AuthServiceInter;
@@ -22,10 +21,10 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO request, HttpSession session) {
+    public ResponseEntity<?> login(@RequestBody UserDTO requestBody, HttpSession session) {
         try {
             // 로그인 시 UserWithPositionDTO를 반환하도록 변경
-            UserWithPositionDTO user = authService.login(request.getUserName(), request.getPassword());
+            UserWithPositionDTO user = authService.login(requestBody.getUserName(), requestBody.getPassword());
 
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -34,6 +33,7 @@ public class AuthController {
 
             // ✅ 세션에 사용자 저장 (직급명 포함)
             session.setAttribute("user", user);
+            System.out.println("🟢 로그인 성공, 세션ID=" + session.getId());
 
             // ✅ 프론트로 직급 정보 포함된 JSON 반환
             return ResponseEntity.ok(user);
@@ -52,7 +52,8 @@ public class AuthController {
     // 세션 확인
     @GetMapping("/me")
     public ResponseEntity<?> me(HttpSession session) {
-        // 세션에서 UserWithPositionDTO로 받기
+        System.out.println("현재 세션 ID: " + session.getId());
+        System.out.println("세션 사용자: " + session.getAttribute("user"));
         UserWithPositionDTO user = (UserWithPositionDTO) session.getAttribute("user");
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("세션 없음");

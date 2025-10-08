@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface ApprovalMapper {
@@ -28,6 +29,13 @@ public interface ApprovalMapper {
     int updateStatus(@Param("num") Long num,
                      @Param("statusCode") String statusCode);
 
-
     ApprovalListDTO findDraftByWriter(String writerId);
+
+    List<ApprovalListDTO> findVisibleApprovals(Map<String, Object> params);
+
+    List<ApprovalListDTO> findApprovalsPagedByRole(Map<String, Object> params);
+
+    int countApprovalsByRole(Map<String, Object> params);
+
+    List<ApprovalListDTO> findApprovalsPaged(Map<String, Object> params);
 }
