@@ -1,14 +1,13 @@
 package com.project.approval.service;
 
 import com.project.approval.dto.ApprovalListDTO;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ApprovalServiceInter {
 
-    // ✅ 페이징 목록
-    Map<String, Object> getApprovalListPaged(int page, int size, String userId, Integer levelNo);
+    List<ApprovalListDTO> findApprovalsByRole(String userId, Integer levelNo, int start, int pageSize);
 
     ApprovalListDTO getApprovalDetail(Long num);
 
@@ -17,9 +16,9 @@ public interface ApprovalServiceInter {
     // ✅ 등록 (insert)
     ApprovalListDTO insertApproval(ApprovalListDTO dto);
 
-    int updateStatus(Long num, String statusCode);
+    int updateStatus(Long num, String statusCode, String approverId, HttpSession session);
 
     ApprovalListDTO getDraftByWriter(String writerId);
 
-    List<ApprovalListDTO> getVisibleApprovals(String userId, String positionCd);
+
 }

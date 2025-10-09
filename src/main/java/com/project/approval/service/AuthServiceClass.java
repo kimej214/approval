@@ -15,7 +15,7 @@ public class AuthServiceClass implements AuthServiceInter{
 
     @Override
     public UserWithPositionDTO login(String userName, String password) {
-        // ✅ 입력값 검증 (보안용)
+        // 입력값 검증 (보안용)
         if (userName == null || userName.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
             throw new IllegalArgumentException("아이디와 비밀번호는 필수입니다.");

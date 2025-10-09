@@ -9,7 +9,7 @@
     <select id="findByUsernameAndPassword" resultType="com.project.approval.dto.UserWithPositionDTO">
         SELECT
         e.emp_no AS id,
-        e.emp_name AS username,       <!-- ✅ 실제 이름으로 변경 -->
+        e.emp_name AS username,       <!-- 실제 이름으로 변경 -->
         e.user_id AS userId,          <!-- 로그인 ID는 별도 필드로 보관 -->
         e.user_pw AS password,
         e.position_cd AS positionCd,

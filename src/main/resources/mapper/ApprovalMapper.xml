@@ -3,73 +3,90 @@
 
 <mapper namespace="com.project.approval.repository.ApprovalMapper">
 
-    <!-- ✅ 레벨별 조회 (사원 전용) -->
+    <!-- 직급별 조회 (사원 전용) -->
     <select id="findApprovalsPagedByRole" parameterType="map" resultType="com.project.approval.dto.ApprovalListDTO">
         SELECT
-        a.num AS num,
+        a.num,
         e1.emp_name AS writerId,
-        a.title AS title,
-        a.content AS content,
+        a.title,
+        a.content,
         a.reg_date AS regDate,
         a.appr_date AS apprDate,
         e2.emp_name AS approverId,
-        s.status_name AS statusCode
+        s.status_code AS statusCode,
+        s.status_name AS statusName
         FROM approval_list a
         LEFT JOIN approval_emp e1 ON a.writer_id = e1.user_id
         LEFT JOIN approval_emp e2 ON a.approver_id = e2.user_id
         LEFT JOIN approval_status s ON a.status_code = s.status_code
+        LEFT JOIN positions p1 ON e1.position_cd = p1.position_cd
         WHERE a.status_code != 'TMP'
-        AND (a.writer_id = #{userId} OR a.approver_id = #{userId})
+        <choose>
+            <when test="levelNo &lt;= 2">
+                AND a.writer_id = #{userId}
+            </when>
+            <when test="levelNo == 3">
+                AND (
+                a.writer_id = #{userId}
+                OR (
+                p1.level_no &lt; 3
+                AND a.status_code = 'PND'
+                AND (a.approver_id IS NULL OR a.approver_id = #{userId})
+                )
+                OR (a.approver_id = #{userId})
+                )
+            </when>
+            <when test="levelNo == 4">
+                AND (
+                a.writer_id = #{userId}
+                OR a.status_code IN ('APR','CMP')
+                OR (a.approver_id = #{userId} AND a.status_code = 'REJ')
+                )
+            </when>
+        </choose>
         ORDER BY a.num DESC
-        LIMIT #{limit} OFFSET #{offset}
+        LIMIT #{start}, #{pageSize}
     </select>
 
-    <!-- ✅ 레벨별 카운트 -->
+    <!--  직급별 totalCount -->
     <select id="countApprovalsByRole" parameterType="map" resultType="int">
         SELECT COUNT(*)
-        FROM approval_list
-        WHERE status_code != 'TMP'
-        AND (writer_id = #{userId} OR approver_id = #{userId})
-    </select>
-
-    <!-- ✅ 전체 조회 (관리자 / 상위직급) -->
-    <select id="findApprovalsPaged" parameterType="map" resultType="com.project.approval.dto.ApprovalListDTO">
-        SELECT
-        a.num AS num,
-        e1.emp_name AS writerId,
-        a.title AS title,
-        a.content AS content,
-        a.reg_date AS regDate,
-        a.appr_date AS apprDate,
-        e2.emp_name AS approverId,
-        s.status_name AS statusCode
         FROM approval_list a
         LEFT JOIN approval_emp e1 ON a.writer_id = e1.user_id
-        LEFT JOIN approval_emp e2 ON a.approver_id = e2.user_id
-        LEFT JOIN approval_status s ON a.status_code = s.status_code
+        LEFT JOIN positions p1 ON e1.position_cd = p1.position_cd
         WHERE a.status_code != 'TMP'
-        ORDER BY a.num DESC
-        LIMIT #{limit} OFFSET #{offset}
+        <choose>
+            <when test="levelNo &lt;= 2">
+                AND a.writer_id = #{userId}
+            </when>
+            <when test="levelNo == 3">
+                AND (
+                a.writer_id = #{userId}
+                OR (p1.level_no &lt; 3 AND a.status_code = 'PND')
+                OR (a.approver_id = #{userId})
+                )
+            </when>
+            <when test="levelNo == 4">
+                AND (
+                a.writer_id = #{userId}
+                OR a.status_code IN ('APR','CMP')
+                OR (a.approver_id = #{userId} AND a.status_code = 'REJ')
+                )
+            </when>
+        </choose>
     </select>
 
-    <!-- ✅ 단일 결재 상세 조회 -->
-    <select id="findApprovalByNum"
-            parameterType="long"
-            resultType="com.project.approval.dto.ApprovalListDTO">
+    <!-- 단일 결재 상세 조회 -->
+    <select id="findApprovalByNum" parameterType="long" resultType="com.project.approval.dto.ApprovalListDTO">
         SELECT
-        a.num AS num,
-        a.writer_id AS writerId,
-        a.title AS title,
-        a.content AS content,
-        a.reg_date AS regDate,
-        a.appr_date AS apprDate,
-        a.approver_id AS approverId,
-        a.status_code AS statusCode
+        a.num, a.writer_id AS writerId, a.title, a.content,
+        a.reg_date AS regDate, a.appr_date AS apprDate,
+        a.approver_id AS approverId, a.status_code AS statusCode
         FROM approval_list a
         WHERE a.num = #{num}
     </select>
 
-    <!-- ✅ 작성자의 임시저장 글 1건 조회 -->
+    <!-- 작성자의 임시저장 글 문서 조회 -->
     <select id="findDraftByWriter" resultType="com.project.approval.dto.ApprovalListDTO">
         SELECT
         num, writer_id AS writerId, title, content, reg_date AS regDate, status_code AS statusCode
@@ -80,17 +97,17 @@
         LIMIT 1
     </select>
 
-    <!-- ✅ 전체 개수 -->
+    <!-- 전체 개수 이거 현재는 안 쓰지만 관리자용이 필요하다면 놔둬도 좋을듯
     <select id="countApprovals" resultType="int">
         SELECT COUNT(*) FROM approval_list WHERE status_code != 'TMP'
-    </select>
+    </select> -->
 
-    <!-- ✅ 현재 최대 글번호 -->
+    <!-- 현재 최대 글번호 -->
     <select id="findMaxNum" resultType="long">
         SELECT MAX(num) FROM approval_list
     </select>
 
-    <!-- ✅ 신규 결재 등록 (임시저장 or 결재요청) -->
+    <!-- 신규 결재 등록 (임시저장 or 결재요청) -->
     <insert id="insertApproval"
             parameterType="com.project.approval.dto.ApprovalListDTO"
             useGeneratedKeys="true"
@@ -101,10 +118,19 @@
         (#{writerId}, #{title}, #{content}, NOW(), #{statusCode})
     </insert>
 
-    <!-- ✅ 상태 변경 -->
+    <!-- 상태 변경 -->
     <update id="updateStatus">
         UPDATE approval_list
-        SET status_code = #{statusCode}
+        SET
+        status_code = #{statusCode},
+        approver_id = CASE
+        WHEN #{approverId} IS NOT NULL THEN #{approverId}
+        ELSE approver_id
+        END,
+        appr_date = CASE
+        WHEN #{statusCode} IN ('APR','CMP','REJ') THEN CURRENT_DATE
+        ELSE appr_date
+        END
         WHERE num = #{num}
     </update>
 

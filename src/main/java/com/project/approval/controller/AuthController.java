@@ -31,18 +31,22 @@ public class AuthController {
                         .body("아이디 또는 비밀번호 불일치");
             }
 
-            // ✅ 세션에 사용자 저장 (직급명 포함)
-            session.setAttribute("user", user);
+            // 세션에 사용자 저장 (직급명 포함)
+            session.setAttribute("user", user); // 전체 객체
+            session.setAttribute("userId", user.getUserId()); // 개별 속성
+            session.setAttribute("levelNo", user.getLevelNo()); // 개별 속성
             System.out.println("🟢 로그인 성공, 세션ID=" + session.getId());
+            System.out.println("✅ userId in session = " + user.getUserId());
+            System.out.println("✅ levelNo in session = " + user.getLevelNo());
 
-            // ✅ 프론트로 직급 정보 포함된 JSON 반환
+            // 프론트로 직급 정보 포함된 JSON 반환
             return ResponseEntity.ok(user);
 
         } catch (IllegalArgumentException e) {
-            // ✅ 입력값 잘못된 경우 → 400 응답
+            // 입력값 잘못된 경우 → 400 응답
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            // ✅ 내부 오류 → 500 응답
+            // 내부 오류 → 500 응답
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("서버 오류: " + e.getMessage());

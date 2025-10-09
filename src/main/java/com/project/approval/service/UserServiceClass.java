@@ -13,7 +13,6 @@ public class UserServiceClass implements UserServiceInter {
 
     private final UserMapper userMapper;
 
-    // ✅ 스프링이 자동으로 매퍼를 넣어줌
     public UserServiceClass(UserMapper userMapper) {
         this.userMapper = userMapper;
     }
@@ -38,7 +37,7 @@ public class UserServiceClass implements UserServiceInter {
         return userMapper.findAllUsersWithPosition();
     }
 
-    // ✅ 로그인용 추가 (직급 정보 포함)
+    // 로그인용 추가 (직급 정보 포함)
     public UserWithPositionDTO login(String userName, String password) {
         return userMapper.findByUsernameAndPassword(userName, password);
     }
