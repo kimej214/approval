@@ -98,7 +98,7 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
         // 반려 처리
         else if ("REJ".equals(statusCode) && levelNo >= 3) {
             nextStatus = "REJ";
-            approverId = loginUser;
+            approverId = loginUser; // 현재 결재자 기록 남김
         }
 
         // 상태 업데이트
@@ -111,7 +111,7 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
                 approvalHistoryMapper.insertInitialHistory(num, current.getWriterId());
             } else {
                 // 결재자 단계별 기록
-                approvalHistoryMapper.insertStepHistory(num, approverId, nextStatus);
+                approvalHistoryMapper.insertStepHistory(num, loginUser, nextStatus);
             }
         }
 

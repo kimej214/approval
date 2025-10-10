@@ -25,15 +25,16 @@
             <when test="levelNo &lt;= 2">
                 AND a.writer_id = #{userId}
             </when>
+            <!-- 본인 결재자 or 결재대기 중 결재자 미지정 문서만 -->
             <when test="levelNo == 3">
                 AND (
                 a.writer_id = #{userId}
+                OR a.approver_id = #{userId}
                 OR (
-                p1.level_no &lt; 3
-                AND a.status_code = 'PND'
-                AND (a.approver_id IS NULL OR a.approver_id = #{userId} OR a.approver_id = e1.user_id)
+                a.status_code = 'PND'
+                AND a.approver_id IS NULL
+                AND p1.level_no &lt; #{levelNo}
                 )
-                OR (a.approver_id = #{userId})
                 )
             </when>
             <when test="levelNo == 4">
@@ -62,12 +63,12 @@
             <when test="levelNo == 3">
                 AND (
                 a.writer_id = #{userId}
+                OR a.approver_id = #{userId}
                 OR (
-                p1.level_no &lt; 3
-                AND a.status_code = 'PND'
-                AND (a.approver_id IS NULL OR a.approver_id = #{userId} OR a.approver_id = e1.user_id)
+                a.status_code = 'PND'
+                AND a.approver_id IS NULL
+                AND p1.level_no &lt; #{levelNo}
                 )
-                OR (a.approver_id = #{userId})
                 )
             </when>
             <when test="levelNo == 4">
@@ -128,6 +129,7 @@
         SET
         status_code = #{statusCode},
         approver_id = CASE
+        WHEN #{statusCode} = 'REJ' THEN NULL <!-- 반려 시 approver_id 초기화 -->
         WHEN #{approverId} IS NOT NULL THEN #{approverId}
         ELSE approver_id
         END,
