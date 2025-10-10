@@ -106,9 +106,15 @@ public class ApprovalController {
         // 세션에서 로그인 사용자 가져오기
         UserWithPositionDTO user = (UserWithPositionDTO) session.getAttribute("user");
         String approverId = user != null ? user.getUserId() : null;
+        int approverLevel = user != null ? user.getLevelNo() : 0;
 
-        // 세션을 함께 전달
-        int updated = approvalService.updateStatus(num, statusCode, approverId, session);
+        ApprovalListDTO current = approvalService.getApprovalDetail(num);
+
+        // 직급 레벨 고려해서 다음 상태 계산
+        String nextStatus = approvalService.getNextStatus(current.getStatusCode(), statusCode, approverLevel);
+
+        // DB 업데이트
+        int updated = approvalService.updateStatus(num, nextStatus, approverId, session);
 
         // 응답 반환
         Map<String, Object> result = new HashMap<>();
@@ -116,8 +122,31 @@ public class ApprovalController {
         result.put("num", num);
         result.put("statusCode", statusCode);
         result.put("approverId", approverId);
+        result.put("appliedStatus", nextStatus);
 
         return ResponseEntity.ok(result);
     }
 
+    // 임시저장 문서를 결재요청으로 전환
+    @PostMapping("/submit")
+    public ResponseEntity<Map<String, Object>> submitApproval(HttpSession session) {
+        String writerId = (String) session.getAttribute("userId");
+        if (writerId == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "로그인 정보가 없습니다."));
+        }
+
+        ApprovalListDTO draft = approvalService.getDraftByWriter(writerId);
+        if (draft == null) {
+            return ResponseEntity.ok(Map.of("success", false, "message", "임시저장 문서가 없습니다."));
+        }
+
+        int updated = approvalService.submitDraftToPending(session);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", updated > 0);
+        result.put("num", draft.getNum()); // 이동용 번호
+        result.put("message", updated > 0 ? "결재요청되었습니다." : "업데이트 실패");
+
+        return ResponseEntity.ok(result);
+    }
 }

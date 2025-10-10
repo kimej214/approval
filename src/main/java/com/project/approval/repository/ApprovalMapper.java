@@ -32,4 +32,6 @@ public interface ApprovalMapper {
 
     // 임시저장 조회
     ApprovalListDTO findDraftByWriter(String writerId);
+
+    int updateTempToPending(String writerId);
 }

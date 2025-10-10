@@ -91,4 +91,36 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
 
         return approvalMapper.updateStatus(num, nextStatus, approverId);
     }
+
+    @Override
+    public String getNextStatus(String currentStatus, String requestStatus, int approverLevel) {
+        String nextStatus = requestStatus;
+
+        // 사원(1), 대리(2) → 중간결재자
+        // 과장(3), 부장(4) 이상 → 최종결재자
+        boolean isFinalApprover = approverLevel >= 3;
+
+        if ("PND".equals(currentStatus) && "APR".equals(requestStatus)) {
+            if (isFinalApprover) {
+                nextStatus = "CMP"; // 최종결재자는 완료
+            } else {
+                nextStatus = "APR"; // 중간결재자는 결재중
+            }
+        } else if ("APR".equals(currentStatus) && "APR".equals(requestStatus)) {
+            nextStatus = "CMP"; // 이미 중간결재중이던 문서 → 최종결재 완료
+        } else if ("REJ".equals(requestStatus)) {
+            nextStatus = "REJ"; // 반려
+        }
+
+        return nextStatus;
+    }
+
+    @Override
+    public int submitDraftToPending(HttpSession session) {
+        String writerId = (String) session.getAttribute("userId");
+        if (writerId == null) return 0;
+
+        // TMP → PND 상태 업데이트
+        return approvalMapper.updateTempToPending(writerId);
+    }
 }

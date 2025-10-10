@@ -11,14 +11,16 @@ public interface ApprovalServiceInter {
 
     ApprovalListDTO getApprovalDetail(Long num);
 
-    Long getNextNum(); // ✅ 가장 큰 번호 + 1 조회용
+    Long getNextNum(); // 가장 큰 번호 + 1 조회용
 
-    // ✅ 등록 (insert)
+    // 등록 (insert)
     ApprovalListDTO insertApproval(ApprovalListDTO dto);
 
     int updateStatus(Long num, String statusCode, String approverId, HttpSession session);
 
     ApprovalListDTO getDraftByWriter(String writerId);
 
+    String getNextStatus(String currentStatus, String requestStatus, int approverLevel);
 
+    int submitDraftToPending(HttpSession session);
 }

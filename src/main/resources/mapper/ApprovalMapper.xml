@@ -31,7 +31,7 @@
                 OR (
                 p1.level_no &lt; 3
                 AND a.status_code = 'PND'
-                AND (a.approver_id IS NULL OR a.approver_id = #{userId})
+                AND (a.approver_id IS NULL OR a.approver_id = #{userId} OR a.approver_id = e1.user_id)
                 )
                 OR (a.approver_id = #{userId})
                 )
@@ -62,7 +62,11 @@
             <when test="levelNo == 3">
                 AND (
                 a.writer_id = #{userId}
-                OR (p1.level_no &lt; 3 AND a.status_code = 'PND')
+                OR (
+                p1.level_no &lt; 3
+                AND a.status_code = 'PND'
+                AND (a.approver_id IS NULL OR a.approver_id = #{userId} OR a.approver_id = e1.user_id)
+                )
                 OR (a.approver_id = #{userId})
                 )
             </when>
@@ -132,6 +136,17 @@
         ELSE appr_date
         END
         WHERE num = #{num}
+    </update>
+
+    <!-- 임시저장(TMP) 상태를 결재대기(PND)로 변경 -->
+    <update id="updateTempToPending" parameterType="string">
+        UPDATE approval_list
+        SET status_code = 'PND',
+        appr_date = NOW()
+        WHERE writer_id = #{writerId}
+        AND status_code = 'TMP'
+        ORDER BY reg_date DESC
+        LIMIT 1
     </update>
 
 </mapper>
