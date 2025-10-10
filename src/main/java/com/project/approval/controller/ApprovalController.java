@@ -1,5 +1,6 @@
 package com.project.approval.controller;
 
+import com.project.approval.dto.ApprovalHistoryDTO;
 import com.project.approval.dto.ApprovalListDTO;
 import com.project.approval.dto.UserWithPositionDTO;
 import com.project.approval.service.ApprovalServiceInter;
@@ -110,18 +111,13 @@ public class ApprovalController {
 
         ApprovalListDTO current = approvalService.getApprovalDetail(num);
 
-        // 직급 레벨 고려해서 다음 상태 계산
-        String nextStatus = approvalService.getNextStatus(current.getStatusCode(), statusCode, approverLevel);
-
         // DB 업데이트
-        int updated = approvalService.updateStatus(num, nextStatus, approverId, session);
+        String nextStatus = approvalService.updateStatus(num, statusCode, null, session); // approverId는 null
 
         // 응답 반환
         Map<String, Object> result = new HashMap<>();
-        result.put("success", updated > 0);
+        result.put("success", nextStatus != null);
         result.put("num", num);
-        result.put("statusCode", statusCode);
-        result.put("approverId", approverId);
         result.put("appliedStatus", nextStatus);
 
         return ResponseEntity.ok(result);
@@ -148,5 +144,11 @@ public class ApprovalController {
         result.put("message", updated > 0 ? "결재요청되었습니다." : "업데이트 실패");
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{num}/history")
+    public ResponseEntity<?> getApprovalHistory(@PathVariable Long num) {
+        List<ApprovalHistoryDTO> history = approvalService.getApprovalHistory(num);
+        return ResponseEntity.ok(history);
     }
 }

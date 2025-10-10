@@ -149,4 +149,14 @@
         LIMIT 1
     </update>
 
+    <!-- 방금 변경된 문서번호 조회 -->
+    <select id="findLatestPendingByWriter" parameterType="string" resultType="long">
+        SELECT num
+        FROM approval_list
+        WHERE writer_id = #{writerId}
+        AND status_code = 'PND'
+        ORDER BY num DESC
+        LIMIT 1
+    </select>
+
 </mapper>

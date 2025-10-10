@@ -34,4 +34,6 @@ public interface ApprovalMapper {
     ApprovalListDTO findDraftByWriter(String writerId);
 
     int updateTempToPending(String writerId);
+
+    Long findLatestPendingByWriter(String writerId);
 }

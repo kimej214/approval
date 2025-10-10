@@ -1,5 +1,6 @@
 package com.project.approval.service;
 
+import com.project.approval.dto.ApprovalHistoryDTO;
 import com.project.approval.dto.ApprovalListDTO;
 import jakarta.servlet.http.HttpSession;
 
@@ -16,11 +17,11 @@ public interface ApprovalServiceInter {
     // 등록 (insert)
     ApprovalListDTO insertApproval(ApprovalListDTO dto);
 
-    int updateStatus(Long num, String statusCode, String approverId, HttpSession session);
+    String updateStatus(Long num, String statusCode, String approverId, HttpSession session);
 
     ApprovalListDTO getDraftByWriter(String writerId);
 
-    String getNextStatus(String currentStatus, String requestStatus, int approverLevel);
-
     int submitDraftToPending(HttpSession session);
+
+    List<ApprovalHistoryDTO> getApprovalHistory(Long num);
 }
