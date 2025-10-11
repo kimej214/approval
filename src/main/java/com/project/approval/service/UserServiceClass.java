@@ -3,6 +3,7 @@ package com.project.approval.service;
 
 import com.project.approval.dto.UserDTO;
 import com.project.approval.dto.UserWithPositionDTO;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.project.approval.repository.UserMapper;
 
@@ -12,9 +13,18 @@ import java.util.List;
 public class UserServiceClass implements UserServiceInter {
 
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceClass(UserMapper userMapper) {
+    public UserServiceClass(UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    // 신규 사용자 등록 시 암호화
+    public void registerUser(UserDTO dto) {
+        String encoded = passwordEncoder.encode(dto.getPassword());
+        dto.setPassword(encoded);
+        userMapper.insertUser(dto);
     }
 
     @Override

@@ -20,5 +20,9 @@ public interface UserMapper {
     UserWithPositionDTO findByUsernameAndPassword(
             @Param("userName") String userName,
             @Param("password") String password);
+
+    void insertUser(UserDTO dto);
+
+    UserWithPositionDTO findByUsername(String userName);
 }
 
