@@ -5,14 +5,20 @@
 
     <!-- 단일 직급 -->
     <select id="findPositionByCd" parameterType="string" resultType="com.project.approval.dto.PositionsDTO">
-        SELECT position_cd, position_name, level_no
+        SELECT
+        position_cd AS positionCd,
+        position_name AS positionName,
+        level_no AS levelNo
         FROM positions
         WHERE position_cd = #{positionCd}
     </select>
 
     <!-- 전체 직급 -->
     <select id="findAllPositions" resultType="com.project.approval.dto.PositionsDTO">
-        SELECT position_cd, position_name, level_no
+        SELECT
+        position_cd AS positionCd,
+        position_name AS positionName,
+        level_no AS levelNo
         FROM positions
     </select>
 

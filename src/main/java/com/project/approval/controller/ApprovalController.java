@@ -32,13 +32,26 @@ public class ApprovalController {
         int pageSize = 10;
         int start = (page - 1) * pageSize;
 
+        // 목록 조회
+        List<ApprovalListDTO> approvals =
+                approvalService.findApprovalsByRole(userId, levelNo, start, pageSize);
+
+        // 전체 개수 조회
+        int totalCount = approvalService.countApprovalsByRole(userId, levelNo);
+        int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+
         System.out.println("✅ userId from session = " + userId);
         System.out.println("✅ levelNo from session = " + levelNo);
         System.out.println("SESSION ID: " + session.getId());
         System.out.println("SESSION ATTRIBUTES: " + session.getAttributeNames());
 
-        List<ApprovalListDTO> approvals = approvalService.findApprovalsByRole(userId, levelNo, start, pageSize);
-        return ResponseEntity.ok(approvals);
+        // ✅ 프론트로 전달할 JSON 구성
+        Map<String, Object> result = new HashMap<>();
+        result.put("approvals", approvals);
+        result.put("totalCount", totalCount);
+        result.put("totalPages", totalPages);
+
+        return ResponseEntity.ok(result);
     }
 
     // 단일 결재 상세조회  (선택 시 표시)

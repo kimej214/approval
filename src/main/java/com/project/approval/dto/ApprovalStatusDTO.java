@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class ApprovalStatusDTO {
 
-    private String status_code;
-    private String status_name;
+    private String statusCode;
+    private String statusName;
 
 }

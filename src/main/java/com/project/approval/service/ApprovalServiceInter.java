@@ -24,4 +24,6 @@ public interface ApprovalServiceInter {
     int submitDraftToPending(HttpSession session);
 
     List<ApprovalHistoryDTO> getApprovalHistory(Long num);
+
+    int countApprovalsByRole(String userId, Integer levelNo);
 }

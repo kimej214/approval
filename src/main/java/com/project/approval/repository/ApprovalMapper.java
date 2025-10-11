@@ -33,7 +33,7 @@ public interface ApprovalMapper {
     // 임시저장 조회
     ApprovalListDTO findDraftByWriter(String writerId);
 
-    int updateTempToPending(String writerId);
+    int updateTempToPending(@Param("num") Long num, @Param("writerId") String writerId);
 
     Long findLatestPendingByWriter(String writerId);
 }

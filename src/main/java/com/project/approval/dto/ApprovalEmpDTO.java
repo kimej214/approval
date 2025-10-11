@@ -7,10 +7,10 @@ import lombok.Setter;
 @Setter
 public class ApprovalEmpDTO {
 
-    private String emp_no;
-    private String user_id;
-    private String user_pw;
-    private String emp_name;
-    private String position_cd;
+    private String empNo;
+    private String userId;
+    private String userPw;
+    private String empName;
+    private String positionCd;
 
 }

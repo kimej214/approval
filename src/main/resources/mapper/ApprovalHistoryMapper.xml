@@ -45,18 +45,19 @@
     <!-- 특정 문서의 전체 이력 조회 -->
     <select id="findHistoryByApprovalNum" resultType="com.project.approval.dto.ApprovalHistoryDTO">
         SELECT
-        ROW_NUMBER() OVER (ORDER BY h.his_reg_date ASC) AS his_num,
-        h.approval_num,
-        e.emp_name AS proc_id,
-        p.position_name AS position_cd,
-        s.status_name AS status_code, <!-- 한글명 -->
-        h.his_reg_date
+        ROW_NUMBER() OVER (ORDER BY h.his_reg_date ASC) AS hisNum,
+        h.approval_num AS approvalNum,
+        e.emp_name AS procId,
+        p.position_name AS positionCd,
+        h.status_code AS statusCode,
+        s.status_name AS statusName,
+        h.his_reg_date AS hisRegDate
         FROM approval_history h
         LEFT JOIN approval_emp e ON h.proc_id = e.user_id
         LEFT JOIN positions p ON e.position_cd = p.position_cd
         LEFT JOIN approval_status s ON h.status_code = s.status_code
         WHERE h.approval_num = #{approvalNum}
+        AND h.status_code != 'TMP'
         ORDER BY h.his_reg_date ASC
     </select>
-
 </mapper>

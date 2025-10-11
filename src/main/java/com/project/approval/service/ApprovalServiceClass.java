@@ -35,6 +35,14 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
     }
 
     @Override
+    public int countApprovalsByRole(String userId, Integer levelNo) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+        params.put("levelNo", levelNo);
+        return approvalMapper.countApprovalsByRole(params);
+    }
+
+    @Override
     public ApprovalListDTO getApprovalDetail(Long num) {
         return approvalMapper.findApprovalByNum(num);
     }
@@ -72,23 +80,30 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
         else if (levelObj instanceof Long) levelNo = ((Long) levelObj).intValue();
         else if (levelObj instanceof String) levelNo = Integer.parseInt((String) levelObj);
 
-        // 결재요청 처리
+        // 결재요청 처리 (사원~부장 공통)
         if ("APR".equals(statusCode)) {
 
-            // 사원·대리: 임시저장 or 반려 → 결재대기
-            if ((levelNo == 1 || levelNo == 2)
+            // 사원·대리·과장·부장: TMP 또는 REJ → PND (결재요청)
+            if ((levelNo >= 1 && levelNo <= 3)
                     && ("TMP".equals(current.getStatusCode()) || "REJ".equals(current.getStatusCode()))) {
                 nextStatus = "PND";
-                approverId = null; // 아직 결재자 없음
+                approverId = null; // 결재자 미지정
             }
 
-            // 과장: 결재대기(PND) or 반려(REJ) 문서 → 결재중(APR)
-            else if (levelNo == 3 && ("PND".equals(current.getStatusCode()) || "REJ".equals(current.getStatusCode()))) {
+            // 과장: 결재대기 or 반려 → 결재중
+            else if (levelNo == 3 &&
+                    ("PND".equals(current.getStatusCode()) || "REJ".equals(current.getStatusCode()))) {
                 nextStatus = "APR";
                 approverId = loginUser;
             }
 
-            // 부장: 결재중(APR) 문서 → 완료(CMP)
+            // 부장: 결재대기(PND) → 결재중(APR)
+            else if (levelNo == 4 && "PND".equals(current.getStatusCode())) {
+                nextStatus = "APR";
+                approverId = loginUser;
+            }
+
+            // 부장: 결재중(APR) → 완료(CMP)
             else if (levelNo == 4 && "APR".equals(current.getStatusCode())) {
                 nextStatus = "CMP";
                 approverId = loginUser;
@@ -96,9 +111,19 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
         }
 
         // 반려 처리
-        else if ("REJ".equals(statusCode) && levelNo >= 3) {
-            nextStatus = "REJ";
-            approverId = loginUser; // 현재 결재자 기록 남김
+        else if ("REJ".equals(statusCode)) {
+
+            // 과장 반려 → 하위직(사원·대리) 확정 반려
+            if (levelNo == 3) {
+                nextStatus = "REJ";
+                approverId = loginUser;
+            }
+
+            // 부장 반려 → 작성자가 재요청 가능하도록 approver_id 초기화
+            else if (levelNo == 4) {
+                nextStatus = "REJ";
+                approverId = null;
+            }
         }
 
         // 상태 업데이트
@@ -106,11 +131,14 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
 
         // 이력 기록
         if (updated > 0) {
-            if (approverId == null) {
+            if (approverId == null && "PND".equals(nextStatus)) {
                 // 최초 작성자 (임시저장 → 결재대기)
                 approvalHistoryMapper.insertInitialHistory(num, current.getWriterId());
-            } else {
-                // 결재자 단계별 기록
+            } else if (approverId != null) {
+                // 승인/진행 단계 (결재자 있음)
+                approvalHistoryMapper.insertStepHistory(num, loginUser, nextStatus);
+            } // 3 부장 반려(REJ) - approverId가 null이지만 기록 남기기
+            else if (approverId == null && "REJ".equals(nextStatus)) {
                 approvalHistoryMapper.insertStepHistory(num, loginUser, nextStatus);
             }
         }
@@ -123,15 +151,16 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
         String writerId = (String) session.getAttribute("userId");
         if (writerId == null) return 0;
 
-        // 1️TMP → PND 상태 변경
-        int updated = approvalMapper.updateTempToPending(writerId);
+        // 현재 임시저장 문서 가져오기
+        ApprovalListDTO draft = approvalMapper.findDraftByWriter(writerId);
+        if (draft == null) return 0;
 
-        // 2️변경된 문서 번호 다시 조회 (이제 PND 상태로 조회)
+        // num 기준으로 상태 갱신
+        int updated = approvalMapper.updateTempToPending(draft.getNum(), writerId);
+
+        // 결재이력 추가
         if (updated > 0) {
-            Long updatedNum = approvalMapper.findLatestPendingByWriter(writerId);
-            if (updatedNum != null) {
-                approvalHistoryMapper.insertInitialHistory(updatedNum, writerId);
-            }
+            approvalHistoryMapper.insertInitialHistory(draft.getNum(), writerId);
         }
 
         return updated;
@@ -139,7 +168,10 @@ public class ApprovalServiceClass implements ApprovalServiceInter {
 
     @Override
     public List<ApprovalHistoryDTO> getApprovalHistory(Long num) {
-        return approvalHistoryMapper.findHistoryByApprovalNum(num);
+        List<ApprovalHistoryDTO> list = approvalHistoryMapper.findHistoryByApprovalNum(num);
+        return list.stream()
+                .filter(h -> !"TMP".equals(h.getStatusCode())) // TMP 제거
+                .toList();
     }
 
 }

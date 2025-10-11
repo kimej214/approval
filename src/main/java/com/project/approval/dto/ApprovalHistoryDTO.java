@@ -9,11 +9,12 @@ import java.util.Date;
 @Setter
 public class ApprovalHistoryDTO {
 
-    private int his_num;
-    private int approval_num;
-    private String proc_id;
-    private String position_cd;
-    private String status_code;
-    private Date his_reg_date;
+    private Long hisNum;
+    private Long approvalNum;
+    private String procId;
+    private String positionCd;
+    private String statusCode; // 실제 코드값 (PND, REJ 등)
+    private String statusName; // 상태 한글명 (결재대기, 반려 등)
+    private Date hisRegDate;
 
 }

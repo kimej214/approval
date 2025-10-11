@@ -27,7 +27,7 @@
         emp_no AS id,
         user_id AS userName,
         user_pw AS password,
-        position_cd
+        position_cd AS positionCd
         FROM approval_emp
         WHERE emp_no = #{id}
     </select>
@@ -38,7 +38,7 @@
         emp_no AS id,
         user_id AS userName,
         user_pw AS password,
-        position_cd
+        position_cd AS positionCd
         FROM approval_emp
     </select>
 
@@ -47,9 +47,9 @@
         SELECT
         e.emp_no AS id,
         e.user_id AS username,
-        e.position_cd,
-        p.position_name,
-        p.level_no
+        e.position_cd AS positionCd,
+        p.position_name AS positionName,
+        p.level_no AS levelNo
         FROM approval_emp e
         LEFT JOIN positions p ON e.position_cd = p.position_cd
         WHERE e.emp_no = #{id}
@@ -60,9 +60,9 @@
         SELECT
         e.emp_no AS id,
         e.user_id AS username,
-        e.position_cd,
-        p.position_name,
-        p.level_no
+        e.position_cd AS positionCd,
+        p.position_name AS positionName,
+        p.level_no AS levelNo
         FROM approval_emp e
         LEFT JOIN positions p ON e.position_cd = p.position_cd
     </select>

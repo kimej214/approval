@@ -38,11 +38,7 @@
                 )
             </when>
             <when test="levelNo == 4">
-                AND (
-                a.writer_id = #{userId}
-                OR a.status_code IN ('APR','CMP')
-                OR (a.approver_id = #{userId} AND a.status_code = 'REJ')
-                )
+                AND a.status_code IN ('PND','APR','CMP','REJ')
             </when>
         </choose>
         ORDER BY a.num DESC
@@ -72,11 +68,7 @@
                 )
             </when>
             <when test="levelNo == 4">
-                AND (
-                a.writer_id = #{userId}
-                OR a.status_code IN ('APR','CMP')
-                OR (a.approver_id = #{userId} AND a.status_code = 'REJ')
-                )
+                AND a.status_code IN ('PND','APR','CMP','REJ')
             </when>
         </choose>
     </select>
@@ -84,9 +76,14 @@
     <!-- 단일 결재 상세 조회 -->
     <select id="findApprovalByNum" parameterType="long" resultType="com.project.approval.dto.ApprovalListDTO">
         SELECT
-        a.num, a.writer_id AS writerId, a.title, a.content,
-        a.reg_date AS regDate, a.appr_date AS apprDate,
-        a.approver_id AS approverId, a.status_code AS statusCode
+        a.num,
+        a.writer_id AS writerId,
+        a.title,
+        a.content,
+        a.reg_date AS regDate,
+        a.appr_date AS apprDate,
+        a.approver_id AS approverId,
+        a.status_code AS statusCode
         FROM approval_list a
         WHERE a.num = #{num}
     </select>
@@ -94,18 +91,18 @@
     <!-- 작성자의 임시저장 글 문서 조회 -->
     <select id="findDraftByWriter" resultType="com.project.approval.dto.ApprovalListDTO">
         SELECT
-        num, writer_id AS writerId, title, content, reg_date AS regDate, status_code AS statusCode
+        num,
+        writer_id AS writerId,
+        title,
+        content,
+        reg_date AS regDate,
+        status_code AS statusCode
         FROM approval_list
         WHERE writer_id = #{writerId}
         AND status_code = 'TMP'
         ORDER BY reg_date DESC
         LIMIT 1
     </select>
-
-    <!-- 전체 개수 이거 현재는 안 쓰지만 관리자용이 필요하다면 놔둬도 좋을듯
-    <select id="countApprovals" resultType="int">
-        SELECT COUNT(*) FROM approval_list WHERE status_code != 'TMP'
-    </select> -->
 
     <!-- 현재 최대 글번호 -->
     <select id="findMaxNum" resultType="long">
@@ -141,14 +138,13 @@
     </update>
 
     <!-- 임시저장(TMP) 상태를 결재대기(PND)로 변경 -->
-    <update id="updateTempToPending" parameterType="string">
+    <update id="updateTempToPending" parameterType="map">
         UPDATE approval_list
         SET status_code = 'PND',
+        approver_id = NULL,
         appr_date = NOW()
-        WHERE writer_id = #{writerId}
-        AND status_code = 'TMP'
-        ORDER BY reg_date DESC
-        LIMIT 1
+        WHERE num = #{num}
+        AND writer_id = #{writerId}
     </update>
 
     <!-- 방금 변경된 문서번호 조회 -->
